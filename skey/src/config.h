@@ -1,0 +1,32 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+#define VERSION_NUMBER 1.0
+#define MY_LITTLE_ENDIAN
+#define HAVE_ASSERT_H
+#define HAVE_CRYPT_H
+#define HAVE_CTYPE_H
+#define HAVE_CTYPE_H
+#define HAVE_ERRNO_H
+#define HAVE_ERRNO_H
+#define HAVE_FCNTL_H
+#define HAVE_FEATURES_H
+#define HAVE_GRP_H
+#define HAVE_PWD_H
+#define HAVE_SGTTY_H
+#define HAVE_SHADOW_H
+#define HAVE_SIGNAL_H
+#define HAVE_STDIO_H
+#define HAVE_STDLIB_H
+#define HAVE_STRING_H
+#define HAVE_SYS_PARAM_H
+#define HAVE_SYS_QUOTA_H
+#define HAVE_SYS_RESOURCE_H
+#define HAVE_SYS_RESOURCE_H
+#define HAVE_SYS_STAT_H
+#define HAVE_SYS_STAT_H
+#define HAVE_SYS_TIME_H
+#define HAVE_SYS_TYPES_H
+#define HAVE_TERMIOS_H
+#define HAVE_TIME_H
+#define HAVE_UNISTD_H
+#endif /* CONFIG_H */

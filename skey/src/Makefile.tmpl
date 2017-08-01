@@ -1,0 +1,43 @@
+CC=&CC&
+BIN=&BIN&
+
+CFLAGS	=  -g -DUSE_ECHO -Wall
+
+LIB     =  libskey.a
+LIBOBJS =  skeylogin.o skeysubr.o md4.o put.o debug.o
+LIBSRCS =  skeylogin.c skeysubr.c md4.c put.c debug.c
+
+all:	$(LIB) key keyinit keysh done
+
+setuid:
+	chmod u+s keyinit keysh
+
+install:
+	chmod u+s keyinit keysh
+	mv key $(BIN)
+	mv keyinit $(BIN)
+	mv keysh $(BIN)
+	cp libskey.a "$(BIN)/lib/"
+	cp -r "../man/" "$(BIN)/man"
+
+target:
+	make all SYS=$@ RANLIB="echo" CFLAGS="$(CFLAGS) &LFLAGS&"
+
+key:    skey.c
+	$(CC) -o $@ $(CFLAGS) skey.c $(LIB) $(SYSLIBS)
+
+keyinit: skeyinit.c
+	$(CC) -o $@ $(CFLAGS) skeyinit.c $(LIB) $(SYSLIBS)
+
+keysh:  skeysh.c
+	$(CC) -o $@ $(CFLAGS) skeysh.c $(LIB) $(SYSLIBS)
+
+$(LIB): $(LIBOBJS)
+	ar rv $(LIB) $(LIBOBJS)
+	$(RANLIB) $(LIB)
+
+done:
+	@echo "Make completed."
+
+clean:
+	rm -f key keyinit keysh *.o libskey.a *.bak *.BAK *.s tags *~

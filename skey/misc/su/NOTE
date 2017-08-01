@@ -1,0 +1,5 @@
+
+su is a replacement for /bin/su.  It needs to be setuid root.
+
+chmod 14755 su
+

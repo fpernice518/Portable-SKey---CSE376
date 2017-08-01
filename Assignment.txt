@@ -1,0 +1,272 @@
+		CSE-376 (Fall 2014) Homework Assignment #3
+			  (Handout #7, version 1)
+		     Due Tuesday, 11/25/2014, 11:59pm
+	       (This assignment is worth 15% of your grade.)
+
+* PURPOSE:
+
+To become familiar with portability issues of practical software packages.
+You will do so by taking an existing software package, fixing it to compile
+cleanly, augmenting the Makefile as needed, and making the code build
+cleanly on several different systems.
+
+
+* BACKGROUND:
+
+The "S/Key" software package is a relatively small package.  It is used
+primarily on firewalls to generate one-time passwords, which are more secure
+than regular passwords because they can only be used once.  Say a user wants
+to login through a firewall.  A firewall using S/Key prompts that user for
+a "challenge" such as "88 ka9q2".  The user then runs "skey 88 ka9q2" safely
+on a secure machine such as an un-networked laptop, inputs a special
+"firewall passphrase/password", and then skey prints out a response to the
+challenge given by the firewall.  For example, if I input "johndoe" when
+prompted for a secret password below, this is what skey will print
+
+$ skey 88 ka9q2
+Reminder - Do not use this program while logged in via telnet or rlogin.
+Enter secret password: *******
+NOLL AMRA FEE HOST BELA DEFT
+
+The six-word string above is the one I respond in the firewall's challenge.
+
+The inner-workings of S/Key are not that important to understand.  The
+existing package already works correctly on the platforms it lists to have
+been ported to, and you are not asked to change its basic behavior.  It is,
+however, important for you to know how to use skey so you can verify that
+your code indeed works.
+
+
+* TASK:
+
+Use the skey-1.1b.tar.gz tarball of the S/Key package as a starting point.
+Download it from class Web site:
+
+	http://www.cs.sunysb.edu/~ezk/cse376-f14/skey-1.1b.tar.gz
+
+Unpack a copy of it in your home directory's hw3 GIT directory:
+~/cse376/$USER/hw3/.  You can unpack the tarball by using the "tar zxf
+<tarballname>" inside the hw3/ directory.
+
+First, make sure the package compiles on a single system such as Solaris, or
+BSD.  Read the headers, README, Makefile, and any other file that's part of
+that package---so you understand what the structure of the sources is (that
+is, which source file is where and what is it for).  You do NOT need to
+understand everything in that package, just enough so you know what it takes
+to make it compile on a number of different systems.  (This is another
+practical lesson of this class: you will often have to deal with software
+packages that you won't fully understand, yet have to fix. :-) Also, for
+this assignment you can safely ignore everything in the misc/ subdirectory
+of the skey package (also, don't try to get the skeylogin and skeysh
+programs working, as you'll need root privileges to do so, but *do* make
+sure that they compile cleanly).
+
+You will find that you may have to fix a few sources here and there to make
+it compile on, say, Linux.
+
+Next, you should add several new options to the "key" program that is built
+as part of this package:
+
+-h:	To display a help/usage string (then exit program)
+
+-v:	To display a version number of the package (stderr, but not exit
+	program).
+
+-d:	Increase debugging level by one.  May be specified multiple times.
+	Debugging level 1 will show entry/exit point of every function.
+	Level 2 will also show return values about to be returned from
+	functions.  Level 3 will also show arguments passed to functions.
+	All debugging output should go to stderr by default.  As there are
+	many possible functions to add debugging to, you should instrument
+	at least ten (10) such functions, including main().  Ensure that
+	each function you instrument is actually called during a common use
+	of the skey tool, so as to prove that your instrumentation for
+	debugging is working.
+
+-l ARG:	Set the logging device for debugging output from stderr to the file
+	ARG.  Fail if cannot append to file ARG.
+
+Next, look at how the package is currently built.  In order to build it on,
+say, a Solaris system, you have to run "make sunos5" (and you may have to
+fix some of the other build targets).  This is because the code in the skey
+package is not portable.  Look at the sources and headers in the package.
+You will find that there are directives at the top of several headers and
+sources such as
+
+	#ifdef SOLARIS
+	/* then do something */
+	#endif
+or
+	#ifdef __svr4__
+	/* then do something */
+	#endif
+
+Your job is to remove *ALL* such references from the code.  The entire code
+of this package should be free of any system-specific CPP directives.  Also
+remove various "extern" definitions and other things that are either not
+needed at all or better gotten by #include'ing the proper system header
+file(s).  You should [re]move all of those special definitions often found
+at the top of various sources into one header named "skey.h" (which already
+exists); this header should be included at the top of all files that need
+it.  This header should also include this directive:
+
+	#include "config.h"
+
+This config.h file will be auto-generated and contain everything that you
+need to build the package, but only stuff that can be auto-detected (the
+rest should be moved to a proper common header file, say skey.h).  In order
+to produce portable code, you should write one or more Bourne Shell (/bin/sh)
+scripts that test for features before using them.  For example, if the
+header file <sys/foo.h> needs to be included only if it exists, you should
+write some shell script such as:
+
+	#!/bin/sh
+	echo "testing for /usr/include/sys/foo.h"
+	if test -f /usr/include/sys/foo.h
+	then
+		echo '#define HAVE_SYS_FOO_H 1' >> config.h
+		echo sys/foo.h 'found...'
+	else
+		echo '#undef HAVE_SYS_FOO_H' >> config.h
+		echo sys/foo.h 'not found...'
+	fi
+
+As you can see, this simple shell script will append to config.h a macro
+which you can use to tell if the system in question has a <sys/foo.h> header
+or not.  Since config.h will be included in skey.h, you can put portable
+code in skey.h as follows:
+
+	#include "config.h"
+	#ifdef HAVE_SYS_FOO_H
+	# include <sys/foo.h>
+	#endif
+
+You should write other shell script tests as needed to test for other
+different features, such as the existence of other headers, library
+functions, etc.
+
+Next, you should deal with the Makefile, which also needs to be made
+portable.  In order to begin building skey after you have changed the code,
+the procedure should be as follows:
+
+$ ./config-skey [-C arg] INSTPATH
+
+That is, you will execute a main shell script called "config-skey" which you
+will write.  The script takes one argument and one optional switch -C; the
+INSTPATH argument is the name of the top-level directory where to install
+the package.  For example:
+
+$ ./config-skey $HOME/itmp
+
+The optional -C argument, if specified, will be followed by the name of a
+default compiler to use to compile the system.  For example:
+
+$ ./config-skey -C /usr/bin/cc $HOME/itmp
+	or
+$ ./config-skey -C gcc $HOME/itmp
+
+If -C is not specified, the script should search for a working compiler
+named "cc"; if not found or "cc" doesn't work, search for "gcc".  Note that
+you will have to devise a simple test to validate if the C compiler you
+found is working.  (This option will be useful on systems with both cc and
+gcc.)
+
+The config-skey script will run all the tests you need in order to
+auto-generate the proper config.h file for building the sources.  In
+addition, the script will dynamically modify the Makefile so that running
+"make install" will do the following:
+
+- install binaries in INSTPATH/bin
+- install man pages in INSTPATH/man
+- install libraries in INSTPATH/lib
+- install headers in INSTPATH/include
+- install any other files as needed under INSTPATH
+
+To make it easier for you to auto-generate the Makefile, you should make a
+"template" version of the Makefile called Makefile.tmpl.  The config-skey
+script should read in that Makefile.tmpl, and depending on what the script
+finds, it should write out an output Makefile that includes the right rules
+for installing the package in the right places, setting CC, CFLAGS, LDFLAGS,
+and any other Makefile rule/variable/definition as needed.
+
+Use /bin/sed to perform string replacement on the template file to produce
+the output file.  For example if the template file has this:
+
+	CC=@MYCOMPILER@
+and if you run this command:
+	$ sed "s/@MYCOMPILER@/gcc/" < Makefile.tmp > Makefile.new
+then the sed command will produce a new makefile with this in it:
+	CC=gcc
+
+Be sure that your Makefile has targets such as clean, all, etc.
+
+The produced code should compile cleanly with "gcc -Wall -Werror" (on
+systems that have gcc only).  You may add/remove/change any source file as
+you see fit.  The code you modify should build cleanly and run the same on
+these three systems: a-centos58.cs.stonybrook.edu,
+b-freebsd91.cs.stonybrook.edu, and a-solaris9.cs.stonybrook.edu.
+
+There are a number of additional Unix tools that can help you in this
+assignment.  Check the manual pages for these: ar, nm, install, ld, ranlib,
+and more.  Check the "See Also" section in those and other manual pages for
+possibly other related tools you could use.
+
+Although the description of this assignment is detailed, you will come
+across a number of things for which I've specifically not told you what to
+do.  I'm looking for you to come up with a clean and portable solution,
+based on your growing experiences with Unix/C.  Additional hints and
+guidelines will be posted to the class mailing list, and be given in class.
+Note that you should begin working on this assignment right away, because it
+will be NEEDED for the next (and final) homework assignment.
+
+
+*** SUBMISSION
+
+Your GIT-based submission should include the following files
+
+- a "README.cse376" file describing what you've done, where, new files
+  you've added, how to use them, and any special/clever things you've done
+  that we should take notice.
+
+- all of the existing skey files, possibly modified as you see fit.
+
+- any new files you've had to add: scripts, templates, etc.
+
+To submit this assignment you should unpack the skey distro into your hw3
+(GIT-controlled) directory, then "cvs add" every file/dir in it, then commit
+them.  Be sure that by the time you've completed this assignment, that all
+necessary files have been committed.  DO NOT commit files that are not needed:
+~ temp files, objects/executables, and all kinds of files that can be
+auto-generated (that means your Makefile too should not be committed).
+
+(See the class Web page for GIT submission guidelines.)
+
+
+*** EXTRA CREDIT
+
+[6 pts] You will find that S/Key produces different output for the same
+	inputs, on some architectures.  It is a bug that relates to 32-bit
+	vs. 64-bit architectures.  Fix this (nasty!) bug.
+
+[3 pts] Get S/Key to run also on a-ubuntu104.cs.stonybrook.edu.
+
+[3 pts] Get S/Key to run also on a-openindiana511.cs.stonybrook.edu.
+
+Note that the above 3 extra credit items will be required in HW4, so if you
+do them now, you not just get extra credit (which can ONLY improve your
+grade), but you also will save time on HW4.  In general, you will find HW4
+easier to do than HW3.
+
+[2-4 pts] If you completely submit your assignment at least 24 hours before
+	  the due date, you will automatically get an extra 2 points of
+	  extra credit.  If you submit at least 48 hours before, you will
+	  automatically get 4 points of extra credit.  This early submission
+	  EC cannot be combined with lateness policy: lateness applies only
+	  after the official deadline.
+
+Good luck.
+
+* ChangeLog
+
+v1: initial draft.
+v2: clarify early submission policy.

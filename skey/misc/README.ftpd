@@ -1,0 +1,36 @@
+
+S/Key can be implemented into any ftpd daemon with very little work.
+
+The ftpd.c source in this directory has been modified to work with
+the S/Key system.  This particular ftpd.c source comes from the 
+WUARCHIVE FTP version 2.1c.
+
+You may easily replace the standard ftpd.c in wuarchive-ftpd (2.1c) with
+this version which has S/KEY modifications.  If you do use this, you must
+do the following:
+
+Edit the Makefile for wuarchive-ftpd (in the ftpd/src directory) and add
+"-DSKEY" to the "CFLAGS =" string.
+
+Example: 
+
+old: CFLAGS   = -DDEBUG ${IFLAGS} ${LFLAGS}
+new: CFLAGS   = -DDEBUG -DSKEY ${IFLAGS} ${LFLAGS}
+
+You must also copy the S/Key library (libskey.a) into the ftpd/src directory
+and change the "LIBES =" line.
+
+old: LIBES    = -lsupport -lsocket -lnsl -lgen libskey.a
+new: LIBES    = -lsupport libskey.a
+
+(Note: Your LIBES might have different libraries than above, just add the
+ libskey.a on the end)
+
+Now your ready to build the new wuarchive ftpd.
+
+If you want to add S/KEY implementation into other ftpd source, just follow
+the included ftpd.c source in this directory and look for the "#ifdef SKEY"
+lines.
+
+ 
+

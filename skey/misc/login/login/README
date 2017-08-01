@@ -1,0 +1,76 @@
+This version of 4.3 BSD NET1 login.c has been hacked for SunOS 4.x,
+Ultrix 4.x, and SunOS 5.x. 
+
+The enhanced login command reports every login failure that is not
+followed by a successful login (the threshold for reporting a failure
+is 1 for known account names, 2 for other names). Unfortunately, only
+the SunOS5 variant of the program supports shadow passwords and
+password aging. No support for quotas, Kerberos or secure RPC. See
+below for a list of enhancements.
+
+THIS PROGRAM CAN INTRODUCE SECURITY HOLES WITH SOME SYSTEM V VERSIONS
+in particular the versions with port monitors (getty, ttymon) that
+convert their standard input to an argument vector for /bin/login. It
+seems to be OK for SunOS 5.0 and later.
+
+This login comand can interface to new-style rlogin daemons that do all
+the authentication by themselves (the login '-f' option).  Support for
+the '-r' option has been added so that it can also interface to older
+rlogin daemons (when compiled with -DOLD_RLOGIN)
+
+You will probably have to modify the syslog.conf file so that auth.info
+messages will become visible. For example:
+
+*.err;kern.debug;auth.info;user.none            /dev/console
+*.err;kern.debug;daemon,auth.info;mail.crit;user.none   /var/adm/messages
+auth.debug                      ifdef(`LOGHOST', /var/log/syslog, @loghost)
+
+Beware that syslogd usually insists on tabs between fields in the
+syslog.conf file.
+
+Ultrix users will want to keep the original login around under a
+different name, because it is still needed for decwindows logins (do
+not forget to adjust the login path name in the /etc/ttys file).
+
+Enhancements:
+
+(1) Bad SunOS [45].x environment variables (LD_xxx, IFS) are always
+    deleted.
+
+(2) If compiled with -DUSE_FBTAB, the program supports device security
+    as described in the SunOS 4.x fbtab(5) manual page. The format of
+    that file is:
+
+	login-terminal  permission      device:device:...
+
+    If someone logs in on the specified login-terminal, the devices in 
+    the third column are chowned to that user and given the specified
+    permissions.  Example:
+
+	/dev/console 0600 /dev/kbd:/dev/mouse:/dev/fb
+
+(3) If compiled with -DLOGIN_ACCESS, the program can selectively allow
+    (or disallow) users (or groups) to login in from specific hosts
+    (or domains) or terminals. Access is controlled by a file
+    /etc/login.access. The login.access file in this directory
+    describes details.
+
+(4) If compiled with -DDETECT_HANGUP, premature hangups are reported
+    as login failure, too. That's an old cracker trick.
+
+Unimplemented SYSV features:
+
+    Additional environment information on standard input is not
+    supported.
+
+    Login failures are not logged to a local file. Instead, they are
+    reported to the syslogd so that you can keep a better eye on all
+    your systems.
+
+    No dial-up passwords; when you are reachable across the Internet
+    (>1000000 systems) you have bigger worries than modem breakins.
+
+    The -d option is permitted but always ignored.
+
+    Users whose password has expired will be asked to change their
+    password, even when they are not permitted to change it.

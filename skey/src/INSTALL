@@ -1,0 +1,22 @@
+
+Installation instructions:
+
+        1) /bin/su to root
+
+	2) Type "make" at the command line and determine your system type.
+
+        3) Type "make <systype>"
+
+        4) Type "make install" to install the binaries in their proper
+           locations and set permissions properly.  (keyinit and keysh need
+           to be setuid root)
+
+        5) Create an emtpy /etc/skeykeys 
+ 
+        6) chmod 644 /etc/skeykeys
+
+You are now ready to have users run keyinit.  Please see keyinit documentation
+on usage, etc.
+
+Problems: chasin@crimelab.com       
+

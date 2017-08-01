@@ -1,0 +1,77 @@
+Frank Pernice
+CSE 376
+Homework 3: SKEY
+
+======README=======
+
+  To Compile and run:
+  cd src/
+  chmod a+x script.sh
+  ./script.sh [options] [install dir]
+  make install
+  ./skey some user name
+     
+
+- The package in this repositoty illustrates my attempt at making the provided
+  SKEY package portable. While it is difficult to retrace my steps exactly, I
+  will do my best to explain my changes below.
+
+- The program seems to compile and run (skey only) without warnings (with Wall)
+  on all required systems. The only apparent warning I get is the "clock-skew"
+  warning on Trollaris (Solaris), but I have no control over that.
+
+- With regards to "removing unnecessary definitions" I assumed that meant
+  that globally accessible function prototypes needed to be placed there.
+  In that case, I carefully went through each function (conberting them 
+  from K&R C to ANSI C with the "cproto" tool on my local machine. 
+  The rest of the code has been cleaned up to the best of my 
+  abolility and time limitations. I would have liked ot rename useless
+  function names like f(), but I wouldn't know where to begin.
+
+- I removed all OS-specific features (often times removing code for ancient
+  systems of yesteryear like SYSV) and instead include header files 
+  based on their existence. If it is a vital header file, I throw
+  a preprocessor error and terminate the compilation prematurely.
+  
+- The debug levels seems to work fine. I ended up creating a new file,
+  debug.c, to contain my debug function. It is basically a switch-
+  statement that allows for fall-thrus (therefore ensuring the lower
+  debug levels are always called in addition to the selected level.
+
+- The debugging log also seems to work no problems. I ended up 
+  pointing the fprintf file pointer (logger) to stderr at startup
+  and changing it respectively if the -l flag was provided (and
+  exiting in the case of failure).
+
+- The version option seems to work. I ended up defining the version
+  number in my config.h file; I figured it would be easier to change
+  in the script than in the code.
+
+- A large part of the project seemed to involve using termios.h rather
+  than termio.h
+
+- With regards to the script, it performds a number of tasks
+  - ensures that I only have one or three script arguments.
+  - checks endianess using printf and octal dump (1 == little, 256 == big)
+    MY_LITTLE_ENDIAN & MY_BIG_ENDIAN were used because regular 
+    LITTLE_ENDIAN and BIG_ENDIAN definitions already exist on some
+    systems.
+  - places guardians around config.h file
+  - #define HAVE_XXX_H's when testing for header existence
+  - Check for a user-provided compiler and test it. If none is 
+    provided I assume cc. In either case I resort to (and test)
+    gcc in the end.
+  - Once this is done, I test to see if I need to link my
+    compilation with -lcrypt by trying to compile a test
+    program.
+  - Finlly, I perform several "sed" commands to replace my
+    template params with their real values. 
+  - Once this is done, I make the provided install directory
+    (without moving stuff over), delete the temporary makefile
+    and then run "make target" to compile the program. 
+
+EXTRA CREDIT:
+ - seems to compile fine on both Ubuntu and OpenIndiana
+   (and my local Fedora machine) with no errors or warnings).
+
+

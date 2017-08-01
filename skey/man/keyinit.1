@@ -1,0 +1,46 @@
+.ll 6i
+.pl 10.5i
+.\"	@(#)keyinit.1	1.1 	10/28/93
+.\"
+.lt 6.0i
+.TH KEYINIT 1 "28 October 1993"
+.AT 3
+.SH NAME
+keyinit \-  Change password or add user to S/Key authentication system.
+.SH SYNOPSIS
+.B keyinit [\-s]   [<user ID >] 
+.SH DESCRIPTION
+.I keyinit
+will initialize the system information to allow one to use S/Key to login.
+.sp 1
+.SH OPTIONS
+.B \-s
+Set secure mode where the user is expected to have used a secure
+machine to generate the first one time password.  Without the \-s the
+system will assume you are direct connected over secure communications
+and prompt you for your secret password.
+The \-s option also allows one to set the seed and count for complete
+control of the parameters.  You can use keyinit -s in compination with
+the 
+.I key
+command to set the seed and count if you do not like the defaults.
+To do this run keyinit in one window and put in your count and seed
+then run key in another window to generate the correct 6 english words
+for that count and seed. You can then
+"cut" and "paste" them or copy them into the keyinit window.
+.sp
+.LP
+.B <user ID>
+the ID for the user to be changed/added (default is the current user)
+.SH DIAGNOSTICS
+.SH FILES
+.TP
+/etc/skeykeys data base of information for S/Key system.
+.SH BUGS
+.LP
+.SH SEE ALSO
+.BR skey(1),
+.BR key(1),
+.BR keyinfo(1)
+.SH AUTHOR
+Phil Karn, Neil M. Haller, John S. Walden, Scott Chasin
